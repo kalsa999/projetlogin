@@ -1,0 +1,60 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: restaurant_erp_app
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www/html
+      - app_vendor:/var/www/html/vendor
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - restaurant_erp_network
+
+  mysql:
+    image: mysql:8.0
+    container_name: restaurant_erp_mysql
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-restaurant_erp}
+      MYSQL_USER: ${DB_USERNAME:-restaurant_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-restaurant_pass}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpass}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - restaurant_erp_network
+
+  phpmyadmin:
+    image: phpmyadmin:5-apache
+    container_name: restaurant_erp_phpmyadmin
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: ${DB_ROOT_PASSWORD:-rootpass}
+      UPLOAD_LIMIT: 64M
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - restaurant_erp_network
+
+volumes:
+  mysql_data:
+  app_vendor:
+
+networks:
+  restaurant_erp_network:
+    name: restaurant_erp_network
