@@ -23,6 +23,7 @@ services:
       MYSQL_USER: ${DB_USERNAME:-restaurant_user}
       MYSQL_PASSWORD: ${DB_PASSWORD:-restaurant_pass}
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpass}
+      MYSQL_ROOT_HOST: "%"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
